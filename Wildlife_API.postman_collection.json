@@ -1,0 +1,804 @@
+{
+	"info": {
+		"_postman_id": "wildlife-api-collection",
+		"name": "Wildlife API",
+		"description": "Complete API collection for the Wildlife Conservation Platform",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "wildlife-api"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check if the API server is running"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@wildlife.com\",\n  \"password\": \"password123\",\n  \"role\": \"CONTRIBUTOR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/register",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"register"
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": []
+				},
+				{
+					"name": "Login User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  const response = pm.response.json();",
+									"  if (response.success && response.data.token) {",
+									"    pm.environment.set('authToken', response.data.token);",
+									"    pm.environment.set('userId', response.data.user.id);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@wildlife.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login with email and password"
+					},
+					"response": []
+				},
+				{
+					"name": "Login Researcher",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"  const response = pm.response.json();",
+									"  if (response.success && response.data.token) {",
+									"    pm.environment.set('authToken', response.data.token);",
+									"    pm.environment.set('userId', response.data.user.id);",
+									"  }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"researcher@wildlife.com\",\n  \"password\": \"researcher123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as researcher user"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Get current user profile"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Doe Updated\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/profile",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"profile"
+							]
+						},
+						"description": "Update current user profile"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Articles",
+			"item": [
+				{
+					"name": "Get All Articles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "search",
+									"value": "tiger",
+									"disabled": true
+								},
+								{
+									"key": "tags",
+									"value": "Conservation,Tigers",
+									"disabled": true
+								},
+								{
+									"key": "category",
+									"value": "Big Cats",
+									"disabled": true
+								},
+								{
+									"key": "featured",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all published articles with optional filtering"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Featured Articles",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/featured",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"featured"
+							]
+						},
+						"description": "Get featured articles"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Tags",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/tags",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"tags"
+							]
+						},
+						"description": "Get all available tags"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Categories",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/categories",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"categories"
+							]
+						},
+						"description": "Get all available categories"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Article by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"1"
+							]
+						},
+						"description": "Get a specific article by ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Articles by Author",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/author/{{userId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"author",
+								"{{userId}}"
+							]
+						},
+						"description": "Get articles by specific author"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Article",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"New Wildlife Discovery\",\n  \"excerpt\": \"Scientists have discovered a new species of wildlife in the Amazon rainforest.\",\n  \"content\": \"<p>This is an exciting discovery that sheds new light on biodiversity in the Amazon region. The new species was found during a recent expedition...</p>\",\n  \"category\": \"Research\",\n  \"tags\": [\"Amazon\", \"Discovery\", \"Research\", \"Biodiversity\"],\n  \"images\": [\n    {\n      \"id\": \"new-species-1\",\n      \"url\": \"https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800\",\n      \"caption\": \"New species discovered in Amazon\",\n      \"alt\": \"Amazon new species\"\n    }\n  ],\n  \"videos\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/articles",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles"
+							]
+						},
+						"description": "Create a new article"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Article",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Updated Wildlife Discovery\",\n  \"excerpt\": \"Updated excerpt about the wildlife discovery.\",\n  \"content\": \"<p>Updated content about the discovery...</p>\",\n  \"category\": \"Research Updated\",\n  \"tags\": [\"Amazon\", \"Discovery\", \"Research\", \"Biodiversity\", \"Updated\"]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"1"
+							]
+						},
+						"description": "Update an existing article"
+					},
+					"response": []
+				},
+				{
+					"name": "Publish Article",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"published\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/1/publish",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"1",
+								"publish"
+							]
+						},
+						"description": "Publish or unpublish an article"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Article",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/articles/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"articles",
+								"1"
+							]
+						},
+						"description": "Delete an article"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "User Management (Admin)",
+			"item": [
+				{
+					"name": "Get All Users",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users?page=1&limit=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								},
+								{
+									"key": "role",
+									"value": "CONTRIBUTOR",
+									"disabled": true
+								},
+								{
+									"key": "approved",
+									"value": "true",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get all users (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"1"
+							]
+						},
+						"description": "Get user by ID (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update User",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Updated User Name\",\n  \"role\": \"CONTRIBUTOR\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"1"
+							]
+						},
+						"description": "Update user details (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Approve User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"approved\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1/approve",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"1",
+								"approve"
+							]
+						},
+						"description": "Approve or disapprove user (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Enable/Disable User",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"enabled\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1/toggle",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"1",
+								"toggle"
+							]
+						},
+						"description": "Enable or disable user account (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/users/1",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"users",
+								"1"
+							]
+						},
+						"description": "Delete user (Admin only)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "File Upload",
+			"item": [
+				{
+					"name": "Upload Image",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload/image",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"image"
+							]
+						},
+						"description": "Upload an image file to Cloudinary"
+					},
+					"response": []
+				},
+				{
+					"name": "Upload Video",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "video",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/upload/video",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"upload",
+								"video"
+							]
+						},
+						"description": "Upload a video file to Cloudinary"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		}
+	]
+} 

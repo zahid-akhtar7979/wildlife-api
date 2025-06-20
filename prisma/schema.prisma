@@ -1,0 +1,58 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(CONTRIBUTOR)
+  approved  Boolean  @default(false)
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  articles Article[]
+
+  @@map("users")
+}
+
+model Article {
+  id          Int       @id @default(autoincrement())
+  title       String
+  content     String?   @db.Text
+  excerpt     String
+  published   Boolean   @default(false)
+  featured    Boolean   @default(false)
+  category    String?
+  views       Int       @default(0)
+  tags        String[]  @default([])
+  images      Json[]    @default([])
+  videos      Json[]    @default([])
+  publishDate DateTime? @map("publish_date")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  // Foreign Keys
+  authorId Int @map("author_id")
+
+  // Relations
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@map("articles")
+}
+
+enum Role {
+  ADMIN
+  CONTRIBUTOR
+} 
