@@ -123,14 +123,18 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
 
     const { caption = '', alt = '' } = req.body;
 
+    // Extract Cloudinary data from multer-storage-cloudinary properties
+    const cloudinaryUrl = req.file.path; // This is the secure_url from Cloudinary
+    const publicId = req.file.filename; // This is the public_id from Cloudinary
+
     // Generate responsive image URLs
     const imageData = {
-      id: req.file.public_id,
-      url: req.file.secure_url,
+      id: publicId,
+      url: cloudinaryUrl,
       caption,
       alt,
       sizes: {
-        thumbnail: cloudinary.url(req.file.public_id, {
+        thumbnail: cloudinary.url(publicId, {
           width: 300,
           height: 200,
           crop: 'fill',
@@ -138,7 +142,7 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
           fetch_format: 'auto',
           secure: true
         }),
-        medium: cloudinary.url(req.file.public_id, {
+        medium: cloudinary.url(publicId, {
           width: 800,
           height: 600,
           crop: 'limit',
@@ -146,7 +150,7 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
           fetch_format: 'auto',
           secure: true
         }),
-        large: cloudinary.url(req.file.public_id, {
+        large: cloudinary.url(publicId, {
           width: 1200,
           height: 800,
           crop: 'limit',
@@ -154,7 +158,7 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
           fetch_format: 'auto',
           secure: true
         }),
-        original: req.file.secure_url
+        original: cloudinaryUrl
       }
     };
 
@@ -164,10 +168,12 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
       data: { image: imageData }
     });
   } catch (error) {
-    console.error('Image upload error:', error);
+    console.error('Image upload error:', error.message || error);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
     res.status(500).json({
       success: false,
-      message: 'Image upload failed'
+      message: 'Image upload failed',
+      error: error.message || 'Unknown error'
     });
   }
 });
@@ -204,8 +210,12 @@ router.post('/video', authenticateToken, requireContributor, uploadVideo.single(
 
     const { caption = '' } = req.body;
 
+    // Extract Cloudinary data from multer-storage-cloudinary properties
+    const cloudinaryUrl = req.file.path; // This is the secure_url from Cloudinary
+    const publicId = req.file.filename; // This is the public_id from Cloudinary
+
     // Generate video thumbnail
-    const thumbnail = cloudinary.url(req.file.public_id, {
+    const thumbnail = cloudinary.url(publicId, {
       resource_type: 'video',
       format: 'jpg',
       transformation: [
@@ -216,8 +226,8 @@ router.post('/video', authenticateToken, requireContributor, uploadVideo.single(
     });
 
     const videoData = {
-      id: req.file.public_id,
-      url: req.file.secure_url,
+      id: publicId,
+      url: cloudinaryUrl,
       caption,
       thumbnail,
       duration: req.file.duration || null,
@@ -230,10 +240,12 @@ router.post('/video', authenticateToken, requireContributor, uploadVideo.single(
       data: { video: videoData }
     });
   } catch (error) {
-    console.error('Video upload error:', error);
+    console.error('Video upload error:', error.message || error);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
     res.status(500).json({
       success: false,
-      message: 'Video upload failed'
+      message: 'Video upload failed',
+      error: error.message || 'Unknown error'
     });
   }
 });
@@ -269,12 +281,12 @@ router.post('/multiple-images', authenticateToken, requireContributor, uploadIma
     }
 
     const uploadedImages = req.files.map(file => ({
-      id: file.public_id,
-      url: file.secure_url,
+      id: file.filename,
+      url: file.path,
       caption: '',
       alt: '',
       sizes: {
-        thumbnail: cloudinary.url(file.public_id, {
+        thumbnail: cloudinary.url(file.filename, {
           width: 300,
           height: 200,
           crop: 'fill',
@@ -282,7 +294,7 @@ router.post('/multiple-images', authenticateToken, requireContributor, uploadIma
           fetch_format: 'auto',
           secure: true
         }),
-        medium: cloudinary.url(file.public_id, {
+        medium: cloudinary.url(file.filename, {
           width: 800,
           height: 600,
           crop: 'limit',
@@ -290,7 +302,7 @@ router.post('/multiple-images', authenticateToken, requireContributor, uploadIma
           fetch_format: 'auto',
           secure: true
         }),
-        large: cloudinary.url(file.public_id, {
+        large: cloudinary.url(file.filename, {
           width: 1200,
           height: 800,
           crop: 'limit',
@@ -298,7 +310,7 @@ router.post('/multiple-images', authenticateToken, requireContributor, uploadIma
           fetch_format: 'auto',
           secure: true
         }),
-        original: file.secure_url
+        original: file.path
       }
     }));
 

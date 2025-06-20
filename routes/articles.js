@@ -395,7 +395,9 @@ router.post('/', authenticateToken, requireContributor, [
   body('category').optional().trim(),
   body('tags').optional().isArray().withMessage('Tags must be an array'),
   body('images').optional().isArray().withMessage('Images must be an array'),
-  body('videos').optional().isArray().withMessage('Videos must be an array')
+  body('videos').optional().isArray().withMessage('Videos must be an array'),
+  body('published').optional().isBoolean().withMessage('Published must be a boolean'),
+  body('featured').optional().isBoolean().withMessage('Featured must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -407,7 +409,18 @@ router.post('/', authenticateToken, requireContributor, [
       });
     }
 
-    const { title, content, excerpt, category, tags = [], images = [], videos = [] } = req.body;
+    const { title, content, excerpt, category, tags = [], images = [], videos = [], published = false, featured = false } = req.body;
+
+    console.log('🔍 CREATE ARTICLE - Full request body:', JSON.stringify(req.body, null, 2));
+    console.log('🔍 CREATE ARTICLE - Extracted values:', {
+      title: title?.substring(0, 50) + '...',
+      published,
+      featured,
+      hasContent: !!content,
+      hasExcerpt: !!excerpt,
+      tagsCount: tags.length,
+      imagesCount: images.length
+    });
 
     const article = await prisma.article.create({
       data: {
@@ -418,6 +431,9 @@ router.post('/', authenticateToken, requireContributor, [
         tags,
         images,
         videos,
+        published,
+        featured,
+        publishDate: published ? new Date() : null,
         authorId: req.user.id
       },
       include: {
@@ -467,7 +483,9 @@ router.put('/:id', authenticateToken, requireContributor, [
   body('category').optional().trim(),
   body('tags').optional().isArray().withMessage('Tags must be an array'),
   body('images').optional().isArray().withMessage('Images must be an array'),
-  body('videos').optional().isArray().withMessage('Videos must be an array')
+  body('videos').optional().isArray().withMessage('Videos must be an array'),
+  body('published').optional().isBoolean().withMessage('Published must be a boolean'),
+  body('featured').optional().isBoolean().withMessage('Featured must be a boolean')
 ], async (req, res) => {
   try {
     const errors = validationResult(req);
@@ -480,7 +498,7 @@ router.put('/:id', authenticateToken, requireContributor, [
     }
 
     const { id } = req.params;
-    const { title, content, excerpt, category, tags, images, videos } = req.body;
+    const { title, content, excerpt, category, tags, images, videos, published, featured } = req.body;
 
     // Check if article exists and user has permission
     const existingArticle = await prisma.article.findUnique({
@@ -510,6 +528,11 @@ router.put('/:id', authenticateToken, requireContributor, [
     if (tags !== undefined) updateData.tags = tags;
     if (images !== undefined) updateData.images = images;
     if (videos !== undefined) updateData.videos = videos;
+    if (published !== undefined) {
+      updateData.published = published;
+      updateData.publishDate = published ? new Date() : null;
+    }
+    if (featured !== undefined) updateData.featured = featured;
 
     const article = await prisma.article.update({
       where: { id: parseInt(id) },
