@@ -312,11 +312,23 @@ router.get('/:id', async (req, res) => {
  *         required: true
  *         schema:
  *           type: integer
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *         description: Page number (default 1)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *         description: Number of articles per page (default 10)
  */
 router.get('/author/:authorId', authenticateToken, async (req, res) => {
   try {
     const { authorId } = req.params;
+    const { page = 1, limit = 10 } = req.query;
     const userId = parseInt(authorId);
+    const skip = (page - 1) * parseInt(limit);
 
     // Check if user can access these articles
     if (req.user.role !== 'ADMIN' && req.user.id !== userId) {
@@ -326,23 +338,40 @@ router.get('/author/:authorId', authenticateToken, async (req, res) => {
       });
     }
 
-    const articles = await prisma.article.findMany({
-      where: { authorId: userId },
-      include: {
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true
+    // Get articles with pagination
+    const [articles, total] = await Promise.all([
+      prisma.article.findMany({
+        where: { authorId: userId },
+        include: {
+          author: {
+            select: {
+              id: true,
+              name: true,
+              email: true
+            }
           }
-        }
-      },
-      orderBy: { createdAt: 'desc' }
-    });
+        },
+        orderBy: { createdAt: 'desc' },
+        skip,
+        take: parseInt(limit)
+      }),
+      prisma.article.count({ where: { authorId: userId } })
+    ]);
+
+    const totalPages = Math.ceil(total / parseInt(limit));
 
     res.json({
       success: true,
-      data: { articles }
+      data: { 
+        articles,
+        pagination: {
+          current: parseInt(page),
+          pages: totalPages,
+          total,
+          hasNext: page < totalPages,
+          hasPrev: page > 1
+        }
+      }
     });
   } catch (error) {
     console.error('Get articles by author error:', error);
