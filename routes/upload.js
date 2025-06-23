@@ -43,7 +43,8 @@ const videoStorage = new CloudinaryStorage({
     folder: 'wildlife-videos',
     resource_type: 'video',
     allowed_formats: ['mp4', 'mov', 'avi', 'mkv', 'webm'],
-    transformation: [
+    // Make transformations asynchronous to handle large videos
+    eager: [
       {
         width: 1280,
         height: 720,
@@ -52,6 +53,7 @@ const videoStorage = new CloudinaryStorage({
         video_codec: 'h264'
       }
     ],
+    eager_async: true, // Process transformations asynchronously
     public_id: (req, file) => {
       const timestamp = Date.now();
       const random = Math.random().toString(36).substring(2, 15);
@@ -201,18 +203,37 @@ router.post('/image', authenticateToken, requireContributor, uploadImage.single(
  */
 router.post('/video', authenticateToken, requireContributor, uploadVideo.single('video'), async (req, res) => {
   try {
+    console.log('🎥 VIDEO UPLOAD REQUEST received');
+    console.log('🎥 Request file:', req.file ? 'Present' : 'Missing');
+    console.log('🎥 Request body:', req.body);
+    
     if (!req.file) {
+      console.log('❌ No video file provided in request');
       return res.status(400).json({
         success: false,
         message: 'No video file provided'
       });
     }
 
+    console.log('🎥 Video file details:', {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      filename: req.file.filename,
+      path: req.file.path
+    });
+
     const { caption = '' } = req.body;
 
     // Extract Cloudinary data from multer-storage-cloudinary properties
     const cloudinaryUrl = req.file.path; // This is the secure_url from Cloudinary
     const publicId = req.file.filename; // This is the public_id from Cloudinary
+
+    console.log('🎥 Cloudinary data extracted:', {
+      publicId,
+      cloudinaryUrl,
+      caption
+    });
 
     // Generate video thumbnail
     const thumbnail = cloudinary.url(publicId, {
@@ -225,6 +246,8 @@ router.post('/video', authenticateToken, requireContributor, uploadVideo.single(
       secure: true
     });
 
+    console.log('🎥 Generated thumbnail URL:', thumbnail);
+
     const videoData = {
       id: publicId,
       url: cloudinaryUrl,
@@ -234,14 +257,20 @@ router.post('/video', authenticateToken, requireContributor, uploadVideo.single(
       format: req.file.format
     };
 
+    console.log('🎥 Final video data:', videoData);
+
     res.json({
       success: true,
       message: 'Video uploaded successfully',
       data: { video: videoData }
     });
   } catch (error) {
-    console.error('Video upload error:', error.message || error);
-    console.error('Full error object:', JSON.stringify(error, null, 2));
+    console.error('❌ Video upload error - Message:', error.message || error);
+    console.error('❌ Video upload error - Stack:', error.stack);
+    console.error('❌ Video upload error - Full object:', JSON.stringify(error, null, 2));
+    console.error('❌ Request file at error:', req.file);
+    console.error('❌ Request body at error:', req.body);
+    
     res.status(500).json({
       success: false,
       message: 'Video upload failed',
@@ -451,11 +480,13 @@ router.post('/transform-image/:publicId', authenticateToken, requireContributor,
 
 // Error handling middleware for multer
 router.use((error, req, res, next) => {
+  console.error('❌ Upload middleware error:', error);
+  
   if (error instanceof multer.MulterError) {
     if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'File too large'
+        message: 'File too large. Please use a smaller file.'
       });
     }
     if (error.code === 'LIMIT_FILE_COUNT') {
@@ -466,11 +497,34 @@ router.use((error, req, res, next) => {
     }
   }
   
+  // Handle Cloudinary-specific errors
+  if (error.message && error.message.includes('too large to process synchronously')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Video file is too large. Please use a smaller video file (under 50MB recommended).'
+    });
+  }
+  
+  if (error.message && error.message.includes('Video file size too large')) {
+    return res.status(400).json({
+      success: false,
+      message: 'Video file exceeds maximum size limit. Please compress your video or use a smaller file.'
+    });
+  }
+  
   if (error.message === 'Only image files are allowed!' || 
       error.message === 'Only video files are allowed!') {
     return res.status(400).json({
       success: false,
       message: error.message
+    });
+  }
+
+  // Generic error for any other upload issues
+  if (error.message) {
+    return res.status(400).json({
+      success: false,
+      message: `Upload failed: ${error.message}`
     });
   }
 
