@@ -280,26 +280,23 @@ async function setupDatabase() {
   }
 }
 
-// Initialize database and start server
-async function startApp() {
-  // Setup database first in production
-  if (process.env.NODE_ENV === 'production') {
-    await setupDatabase();
-  }
+// Start server immediately, then setup database in background
+console.log('🔧 [STARTUP] Starting server on port', PORT);
+app.listen(PORT, () => {
+  console.log('🔧 [STARTUP] Server started successfully!');
+  logger.info(`🚀 Wildlife API server running on port ${PORT}`);
+  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+  logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
   
-  // Start server
-  console.log('🔧 [STARTUP] Starting server on port', PORT);
-  app.listen(PORT, () => {
-    console.log('🔧 [STARTUP] Server started successfully!');
-    logger.info(`🚀 Wildlife API server running on port ${PORT}`);
-    logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-    logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
-    console.log('🔧 [DATABASE] Database ready and server online');
-  });
-}
-
-// Start the application
-startApp().catch(error => {
-  console.error('💥 [STARTUP] Failed to start application:', error);
-  process.exit(1);
+  // Setup database in background AFTER server is ready for Railway health checks
+  if (process.env.NODE_ENV === 'production') {
+    console.log('🔧 [DATABASE] Starting background database setup...');
+    setupDatabase().then(() => {
+      console.log('🔧 [DATABASE] Background database setup completed');
+    }).catch(error => {
+      console.log('⚠️ [DATABASE] Background setup failed:', error.message);
+    });
+  } else {
+    console.log('🔧 [DATABASE] Skipping database setup in development');
+  }
 }); 
