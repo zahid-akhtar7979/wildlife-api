@@ -1,6 +1,17 @@
 require('dotenv').config();
 require('express-async-errors');
 
+// TEMPORARY: Hardcoded environment variables for testing
+if (process.env.NODE_ENV === 'production') {
+  process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://postgres:qZBGaMpDwgVpOzNRkjXkrqBnAopTNofT@postgres.railway.internal:5432/railway?schema=public&sslmode=require&connection_limit=10&pool_timeout=20";
+  process.env.JWT_SECRET = process.env.JWT_SECRET || "wildlife-prod-jwt-key-b8k9x2m4n7p9q1r3s5t8u0v2w4x6y8z1";
+  process.env.JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || "7d";
+  process.env.CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || "dc2tqyj5d";
+  process.env.CLOUDINARY_API_KEY = process.env.CLOUDINARY_API_KEY || "133449986291256";
+  process.env.CLOUDINARY_API_SECRET = process.env.CLOUDINARY_API_SECRET || "P80ZPfvd4LOWCN4_ew4VGwxbb7Y";
+  console.log('🔧 [TESTING] Using hardcoded environment variables');
+}
+
 console.log('🔧 [STARTUP] Loading dependencies...');
 const express = require('express');
 const cors = require('cors');
