@@ -14,12 +14,16 @@ console.log('🔧 [STARTUP] Dependencies loaded successfully');
 console.log('🔧 [STARTUP] Loading route modules...');
 const authRoutes = require('./routes/auth');
 console.log('🔧 [STARTUP] Auth routes loaded');
+console.log('🔍 [DEBUG] Auth routes type:', typeof authRoutes);
 const articleRoutes = require('./routes/articles');
 console.log('🔧 [STARTUP] Article routes loaded');
+console.log('🔍 [DEBUG] Article routes type:', typeof articleRoutes);
 const userRoutes = require('./routes/users');
 console.log('🔧 [STARTUP] User routes loaded');
+console.log('🔍 [DEBUG] User routes type:', typeof userRoutes);
 const uploadRoutes = require('./routes/upload');
 console.log('🔧 [STARTUP] Upload routes loaded');
+console.log('🔍 [DEBUG] Upload routes type:', typeof uploadRoutes);
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -110,6 +114,28 @@ app.use((req, res, next) => {
   next();
 });
 
+// Debug middleware to log ALL requests
+app.use((req, res, next) => {
+  console.log(`🔍 [REQUEST DEBUG] ${req.method} ${req.path} - Headers: ${JSON.stringify(req.headers)}`);
+  next();
+});
+
+// Root route
+app.get('/', (req, res) => {
+  console.log('🔍 [ROUTE DEBUG] Root route hit!');
+  res.json({
+    success: true,
+    message: 'Wildlife API is running!',
+    available_routes: [
+      'GET /',
+      'GET /test', 
+      'GET /health',
+      'GET /api/test',
+      'GET /debug/routes'
+    ]
+  });
+});
+
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({
@@ -122,6 +148,7 @@ app.get('/health', (req, res) => {
 
 // Simple test endpoint
 app.get('/test', (req, res) => {
+  console.log('🔍 [ROUTE DEBUG] /test route hit!');
   res.json({
     success: true,
     message: 'Test endpoint working',
@@ -134,6 +161,7 @@ console.log('🔧 [STARTUP] Mounting API routes...');
 
 // Add a simple test route to verify routing works
 app.get('/api/test', (req, res) => {
+  console.log('🔍 [ROUTE DEBUG] /api/test route hit!');
   res.json({
     success: true,
     message: 'API routing is working!',
@@ -144,12 +172,16 @@ console.log('🔧 [STARTUP] Mounted /api/test');
 
 app.use('/api/auth', authRoutes);
 console.log('🔧 [STARTUP] Mounted /api/auth');
+console.log('🔍 [DEBUG] App router stack length after auth:', app._router.stack.length);
 app.use('/api/articles', articleRoutes);
 console.log('🔧 [STARTUP] Mounted /api/articles');
+console.log('🔍 [DEBUG] App router stack length after articles:', app._router.stack.length);
 app.use('/api/users', userRoutes);
 console.log('🔧 [STARTUP] Mounted /api/users');
+console.log('🔍 [DEBUG] App router stack length after users:', app._router.stack.length);
 app.use('/api/upload', uploadRoutes);
 console.log('🔧 [STARTUP] Mounted /api/upload');
+console.log('🔍 [DEBUG] App router stack length after upload:', app._router.stack.length);
 console.log('🔧 [STARTUP] All API routes mounted successfully');
 
 // Swagger documentation - Enable in both development and production
@@ -188,11 +220,38 @@ const options = {
 const specs = swaggerJsdoc(options);
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
+// Debug endpoint to list all routes
+app.get('/debug/routes', (req, res) => {
+  const routes = [];
+  app._router.stack.forEach(function(middleware) {
+    if (middleware.route) {
+      routes.push({
+        path: middleware.route.path,
+        methods: Object.keys(middleware.route.methods)
+      });
+    } else if (middleware.name === 'router') {
+      middleware.handle.stack.forEach(function(handler) {
+        if (handler.route) {
+          routes.push({
+            path: handler.route.path,
+            methods: Object.keys(handler.route.methods)
+          });
+        }
+      });
+    }
+  });
+  res.json({ routes });
+});
+
 // 404 handler
 app.use('*', (req, res) => {
+  console.log(`🔍 [404 DEBUG] Route not found: ${req.method} ${req.originalUrl}`);
   res.status(404).json({
     success: false,
-    message: 'API endpoint not found'
+    message: 'API endpoint not found',
+    attempted_path: req.originalUrl,
+    method: req.method,
+    debug_info: 'Check /debug/routes for available routes'
   });
 });
 
