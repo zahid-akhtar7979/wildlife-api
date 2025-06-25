@@ -4,7 +4,9 @@
   "description": "Backend API for Wildlife UI Application",
   "main": "server.js",
   "scripts": {
-    "start": "npx prisma generate && npx prisma db push --accept-data-loss && node prisma/seed.js && node server.js",
+    "start": "node server.js",
+    "postinstall": "npx prisma generate",
+    "setup": "npx prisma db push --accept-data-loss && node prisma/seed.js",
     "dev": "nodemon server.js",
     "build": "npx prisma generate",
     "test": "jest",

@@ -168,11 +168,40 @@ app.use('*', (req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
+// Database setup function
+async function setupDatabase() {
+  try {
+    console.log('🔧 [DATABASE] Setting up database...');
+    const { exec } = require('child_process');
+    const { promisify } = require('util');
+    const execAsync = promisify(exec);
+    
+    // Run database setup
+    await execAsync('npx prisma db push --accept-data-loss');
+    console.log('🔧 [DATABASE] Database schema applied successfully');
+    
+    // Run seeding
+    await execAsync('node prisma/seed.js');
+    console.log('🔧 [DATABASE] Database seeded successfully');
+    
+  } catch (error) {
+    console.log('⚠️ [DATABASE] Setup failed:', error.message);
+    console.log('🔧 [DATABASE] Server will continue without setup - database may need manual setup');
+  }
+}
+
 // Start server
 console.log('🔧 [STARTUP] Starting server on port', PORT);
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log('🔧 [STARTUP] Server started successfully!');
   logger.info(`🚀 Wildlife API server running on port ${PORT}`);
   logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
+  
+  // Setup database after server starts (non-blocking)
+  if (process.env.NODE_ENV === 'production') {
+    setTimeout(() => {
+      setupDatabase();
+    }, 2000); // Wait 2 seconds after server starts
+  }
 }); 
