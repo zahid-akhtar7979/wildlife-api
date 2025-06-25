@@ -136,7 +136,7 @@ const options = {
     servers: [
       {
         url: process.env.NODE_ENV === 'production' 
-          ? 'https://your-app.railway.app/api'  // Replace with actual Railway URL
+          ? 'https://wildlife-api-production.railway.app/api'
           : `http://localhost:${PORT}/api`,
         description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
