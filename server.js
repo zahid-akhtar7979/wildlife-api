@@ -11,10 +11,15 @@ console.log('🔧 [STARTUP] Dependencies loaded successfully');
 // const rateLimit = require('express-rate-limit'); // Commented out to remove rate limiting
 
 // Import routes
+console.log('🔧 [STARTUP] Loading route modules...');
 const authRoutes = require('./routes/auth');
+console.log('🔧 [STARTUP] Auth routes loaded');
 const articleRoutes = require('./routes/articles');
+console.log('🔧 [STARTUP] Article routes loaded');
 const userRoutes = require('./routes/users');
+console.log('🔧 [STARTUP] User routes loaded');
 const uploadRoutes = require('./routes/upload');
+console.log('🔧 [STARTUP] Upload routes loaded');
 
 // Import middleware
 const errorHandler = require('./middleware/errorHandler');
@@ -115,11 +120,26 @@ app.get('/health', (req, res) => {
   });
 });
 
+// Simple test endpoint
+app.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Test endpoint working',
+    routes_mounted: ['/api/auth', '/api/articles', '/api/users', '/api/upload']
+  });
+});
+
 // API routes
+console.log('🔧 [STARTUP] Mounting API routes...');
 app.use('/api/auth', authRoutes);
+console.log('🔧 [STARTUP] Mounted /api/auth');
 app.use('/api/articles', articleRoutes);
+console.log('🔧 [STARTUP] Mounted /api/articles');
 app.use('/api/users', userRoutes);
+console.log('🔧 [STARTUP] Mounted /api/users');
 app.use('/api/upload', uploadRoutes);
+console.log('🔧 [STARTUP] Mounted /api/upload');
+console.log('🔧 [STARTUP] All API routes mounted successfully');
 
 // Swagger documentation - Enable in both development and production
 const swaggerJsdoc = require('swagger-jsdoc');
