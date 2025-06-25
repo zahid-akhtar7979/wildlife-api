@@ -243,7 +243,7 @@ router.get('/categories', async (req, res) => {
  * @swagger
  * /articles/{id}:
  *   get:
- *     summary: Get article by ID
+ *     summary: Get article by ID (public for published, authenticated for drafts)
  *     tags: [Articles]
  *     parameters:
  *       - in: path
@@ -255,12 +255,40 @@ router.get('/categories', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    let user = null;
 
+    // Try to authenticate if token is provided, but don't require it
+    if (token) {
+      try {
+        console.log(`🔐 GET ARTICLE ${id} - Token found, attempting verification...`);
+        console.log(`🔐 GET ARTICLE ${id} - Token preview: ${token.substring(0, 50)}...`);
+        console.log(`🔐 GET ARTICLE ${id} - JWT_SECRET available:`, !!process.env.JWT_SECRET);
+        
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        console.log(`🔐 GET ARTICLE ${id} - Token decoded successfully:`, decoded);
+        
+        const { PrismaClient } = require('@prisma/client');
+        const authPrisma = new PrismaClient();
+        user = await authPrisma.user.findUnique({
+          where: { id: decoded.userId }
+        });
+        await authPrisma.$disconnect();
+        console.log(`🔐 GET ARTICLE ${id} - User lookup result:`, user ? `${user.name} (ID: ${user.id})` : 'NULL');
+        console.log(`🔐 GET ARTICLE ${id} - Authenticated user:`, user?.name, `(ID: ${user?.id})`);
+      } catch (error) {
+        // Invalid token, continue as unauthenticated user
+        console.log(`🔐 GET ARTICLE ${id} - Token verification failed:`, error.name, error.message);
+        console.log(`🔐 GET ARTICLE ${id} - Invalid token provided, continuing as public user`);
+      }
+    } else {
+      console.log(`🔐 GET ARTICLE ${id} - No token provided, accessing as public user`);
+    }
+
+    // First, try to find the article without publication filter
     const article = await prisma.article.findUnique({
-      where: { 
-        id: parseInt(id),
-        published: true
-      },
+      where: { id: parseInt(id) },
       include: {
         author: {
           select: {
@@ -279,15 +307,46 @@ router.get('/:id', async (req, res) => {
       });
     }
 
-    // Increment view count
-    await prisma.article.update({
-      where: { id: parseInt(id) },
-      data: { views: { increment: 1 } }
-    });
+    // Check access permissions for drafts
+    if (!article.published) {
+      console.log(`📝 GET ARTICLE ${id} - Draft article detected, checking permissions...`);
+      console.log(`📝 Article author ID: ${article.authorId}, User ID: ${user?.id}, User role: ${user?.role}`);
+      
+      if (!user) {
+        console.log(`❌ GET ARTICLE ${id} - Draft access denied: No authentication`);
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required to access draft articles'
+        });
+      }
+
+      // Only the author or admin can access draft articles
+      if (user.role !== 'ADMIN' && article.authorId !== user.id) {
+        console.log(`❌ GET ARTICLE ${id} - Draft access denied: User ${user.id} cannot access article by author ${article.authorId}`);
+        return res.status(403).json({
+          success: false,
+          message: 'You can only access your own draft articles'
+        });
+      }
+      
+      console.log(`✅ GET ARTICLE ${id} - Draft access granted to user ${user.id}`);
+    } else {
+      console.log(`📰 GET ARTICLE ${id} - Published article, public access granted`);
+    }
+
+    // Increment view count only for published articles
+    let updatedViews = article.views;
+    if (article.published) {
+      await prisma.article.update({
+        where: { id: parseInt(id) },
+        data: { views: { increment: 1 } }
+      });
+      updatedViews = article.views + 1;
+    }
 
     res.json({
       success: true,
-      data: { article: { ...article, views: article.views + 1 } }
+      data: { article: { ...article, views: updatedViews } }
     });
   } catch (error) {
     console.error('Get article error:', error);
