@@ -1,0 +1,30 @@
+# Environment Configuration Template
+# Copy this file to .env and fill in your actual values
+
+# Application Environment
+NODE_ENV=development
+PORT=3001
+
+# Database Configuration
+DATABASE_URL="postgresql://username:password@localhost:5432/wildlife_db?schema=public"
+
+# JWT Configuration
+JWT_SECRET=your-super-secret-jwt-key-here-make-it-very-long-and-random-for-security
+JWT_EXPIRES_IN=7d
+
+# Cloudinary Configuration (for image/video uploads)
+CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
+CLOUDINARY_API_KEY=your-cloudinary-api-key
+CLOUDINARY_API_SECRET=your-cloudinary-api-secret
+
+# CORS Origins (add your frontend URLs)
+FRONTEND_URL=http://localhost:3000
+
+# Optional: Email Configuration (if you add email features later)
+# EMAIL_HOST=smtp.gmail.com
+# EMAIL_PORT=587
+# EMAIL_USER=your-email@gmail.com
+# EMAIL_PASS=your-email-password
+
+# Optional: Redis Configuration (for session storage/caching)
+# REDIS_URL=redis://localhost:6379 
