@@ -280,18 +280,26 @@ async function setupDatabase() {
   }
 }
 
-// Start server
-console.log('🔧 [STARTUP] Starting server on port', PORT);
-app.listen(PORT, async () => {
-  console.log('🔧 [STARTUP] Server started successfully!');
-  logger.info(`🚀 Wildlife API server running on port ${PORT}`);
-  logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
-  logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
-  
-  // Setup database after server starts (non-blocking)
+// Initialize database and start server
+async function startApp() {
+  // Setup database first in production
   if (process.env.NODE_ENV === 'production') {
-    setTimeout(() => {
-      setupDatabase();
-    }, 2000); // Wait 2 seconds after server starts
+    await setupDatabase();
   }
+  
+  // Start server
+  console.log('🔧 [STARTUP] Starting server on port', PORT);
+  app.listen(PORT, () => {
+    console.log('🔧 [STARTUP] Server started successfully!');
+    logger.info(`🚀 Wildlife API server running on port ${PORT}`);
+    logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
+    logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
+    console.log('🔧 [DATABASE] Database ready and server online');
+  });
+}
+
+// Start the application
+startApp().catch(error => {
+  console.error('💥 [STARTUP] Failed to start application:', error);
+  process.exit(1);
 }); 
