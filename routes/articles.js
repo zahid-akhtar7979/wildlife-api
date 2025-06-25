@@ -6,6 +6,15 @@ const { authenticateToken, requireContributor, requireOwnershipOrAdmin } = requi
 const router = express.Router();
 const prisma = new PrismaClient();
 
+// Simple test route to verify this router works
+router.get('/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Articles router is working!',
+    routes: ['GET /api/articles', 'GET /api/articles/categories', 'POST /api/articles']
+  });
+});
+
 /**
  * @swagger
  * /articles:
@@ -51,6 +60,7 @@ router.get('/', [
   query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50')
 ], async (req, res) => {
   try {
+    console.log('🔍 [ARTICLES] GET / endpoint hit - query params:', req.query);
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       return res.status(400).json({

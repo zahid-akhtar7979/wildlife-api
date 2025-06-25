@@ -131,6 +131,17 @@ app.get('/test', (req, res) => {
 
 // API routes
 console.log('🔧 [STARTUP] Mounting API routes...');
+
+// Add a simple test route to verify routing works
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'API routing is working!',
+    timestamp: new Date().toISOString()
+  });
+});
+console.log('🔧 [STARTUP] Mounted /api/test');
+
 app.use('/api/auth', authRoutes);
 console.log('🔧 [STARTUP] Mounted /api/auth');
 app.use('/api/articles', articleRoutes);
