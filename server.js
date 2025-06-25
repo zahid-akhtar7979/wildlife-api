@@ -110,41 +110,41 @@ app.use('/api/articles', articleRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/upload', uploadRoutes);
 
-// Swagger documentation
-if (process.env.NODE_ENV !== 'production') {
-  const swaggerJsdoc = require('swagger-jsdoc');
-  const swaggerUi = require('swagger-ui-express');
-  
-  const options = {
-    definition: {
-      openapi: '3.0.0',
-      info: {
-        title: 'Wildlife API',
-        version: '1.0.0',
-        description: 'API for Wildlife UI Application',
+// Swagger documentation - Enable in both development and production
+const swaggerJsdoc = require('swagger-jsdoc');
+const swaggerUi = require('swagger-ui-express');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Wildlife API',
+      version: '1.0.0',
+      description: 'API for Wildlife Conservation Platform',
+    },
+    servers: [
+      {
+        url: process.env.NODE_ENV === 'production' 
+          ? 'https://your-app.railway.app/api'  // Replace with actual Railway URL
+          : `http://localhost:${PORT}/api`,
+        description: process.env.NODE_ENV === 'production' ? 'Production server' : 'Development server',
       },
-      servers: [
-        {
-          url: `http://localhost:${PORT}/api`,
-          description: 'Development server',
-        },
-      ],
-      components: {
-        securitySchemes: {
-          bearerAuth: {
-            type: 'http',
-            scheme: 'bearer',
-            bearerFormat: 'JWT',
-          },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
         },
       },
     },
-    apis: ['./routes/*.js'], // paths to files containing OpenAPI definitions
-  };
-  
-  const specs = swaggerJsdoc(options);
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
-}
+  },
+  apis: ['./routes/*.js'], // paths to files containing OpenAPI definitions
+};
+
+const specs = swaggerJsdoc(options);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 // 404 handler
 app.use('*', (req, res) => {
