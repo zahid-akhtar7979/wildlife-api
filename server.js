@@ -1,10 +1,13 @@
 require('dotenv').config();
 require('express-async-errors');
 
+console.log('🔧 [STARTUP] Loading dependencies...');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const compression = require('compression');
+
+console.log('🔧 [STARTUP] Dependencies loaded successfully');
 // const rateLimit = require('express-rate-limit'); // Commented out to remove rate limiting
 
 // Import routes
@@ -17,8 +20,16 @@ const uploadRoutes = require('./routes/upload');
 const errorHandler = require('./middleware/errorHandler');
 const logger = require('./utils/logger');
 
+console.log('🔧 [STARTUP] Creating Express app...');
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+console.log('🔧 [STARTUP] Express app created, PORT:', PORT);
+console.log('🔧 [STARTUP] Environment variables check:');
+console.log('  - NODE_ENV:', process.env.NODE_ENV);
+console.log('  - DATABASE_URL:', process.env.DATABASE_URL ? 'SET' : 'MISSING');
+console.log('  - JWT_SECRET:', process.env.JWT_SECRET ? 'SET' : 'MISSING');
+console.log('  - CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? 'SET' : 'MISSING');
 
 // Security middleware
 app.use(helmet());
@@ -158,7 +169,9 @@ app.use('*', (req, res) => {
 app.use(errorHandler);
 
 // Start server
+console.log('🔧 [STARTUP] Starting server on port', PORT);
 app.listen(PORT, () => {
+  console.log('🔧 [STARTUP] Server started successfully!');
   logger.info(`🚀 Wildlife API server running on port ${PORT}`);
   logger.info(`📚 API Documentation: http://localhost:${PORT}/api-docs`);
   logger.info(`🏥 Health Check: http://localhost:${PORT}/health`);
