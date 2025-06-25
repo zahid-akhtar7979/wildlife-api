@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
+    "build": "npx prisma generate && npx prisma migrate deploy",
+    "postbuild": "node prisma/seed.js",
     "test": "jest",
     "test:watch": "jest --watch",
     "db:migrate": "npx prisma migrate dev",
